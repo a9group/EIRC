@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  ircd:
+    image: inspircd/inspircd-docker
+    container_name: enterprise-ircd
+    ports:
+      - "6697:6697"
+    volumes:
+      - ./conf:/inspircd/conf
+    networks:
+      - ircnet
+
+  webirc:
+    image: thelounge/thelounge:latest
+    container_name: enterprise-webirc
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./thelounge-data:/var/opt/thelounge
+    environment:
+      THELOUNGE_PUBLIC: "false"
+      THELOUNGE_PREFETCH: "true"
+      THELOUNGE_REVERSE_PROXY: "true"
+    depends_on:
+      - ircd
+    networks:
+      - ircnet
+
+  notif-gateway:
+    build: ./notification-gateway
+    container_name: notif-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ircd
+    networks:
+      - ircnet
+
+networks:
+  ircnet:
